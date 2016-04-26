@@ -21,21 +21,20 @@ import android.view.SubMenu;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-/*
-*
-* Employee ID key = 213
-*
-* */
 
 public class UserActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     private int EmployeeCount;
+    private JSONArray employees;
+    private final int EmpKey = 3593;
+    public ProgressDialog progress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,6 +74,11 @@ public class UserActivity extends AppCompatActivity
         ((TextView) header.findViewById(R.id.nav_email)).setText(user.getString("email", "Email"));
 
         EmployeeCount = 0;
+        progress= new ProgressDialog(UserActivity.this);
+        progress.setMessage("Loading...");
+        progress.setCancelable(false);
+        progress.setCanceledOnTouchOutside(false);
+        progress.show();
         // POST req to get user data
         (new GetUserData()).execute(
                 "/app/getUserData",
@@ -103,6 +107,7 @@ public class UserActivity extends AppCompatActivity
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -115,6 +120,16 @@ public class UserActivity extends AppCompatActivity
         if(id == R.id.logout){
             getSharedPreferences("userDetails", Context.MODE_PRIVATE).edit().clear().putBoolean("LoggedIn", false).commit();
             startActivity(new Intent(UserActivity.this, FirstActivity.class));
+        } else if (id%EmpKey == 0){
+            int empId = id/EmpKey -1 ;
+            String n = null;
+            try {
+                Intent intent = new Intent(UserActivity.this,EmployeeView.class);
+                intent.putExtra("id",employees.getJSONObject(empId).getString("id"));
+                startActivity(intent);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -133,16 +148,10 @@ public class UserActivity extends AppCompatActivity
 
     /* To get the User Data */
     private class GetUserData extends HttpPost {
-        public ProgressDialog progress;
 
         @Override
         protected void onPreExecute(){
             checkIfNetworkIsConnected();
-            progress= new ProgressDialog(UserActivity.this);
-            progress.setMessage("Loading...");
-            progress.setCancelable(false);
-            progress.setCanceledOnTouchOutside(false);
-            progress.show();
         }
 
         @Override
@@ -237,7 +246,6 @@ public class UserActivity extends AppCompatActivity
 
     /* To get the User Data */
     private class GetEmployeeData extends HttpPost {
-        public ProgressDialog progress;
 
         @Override
         protected void onPreExecute(){
@@ -264,20 +272,14 @@ public class UserActivity extends AppCompatActivity
                         final Menu menu = navigationView.getMenu();
 
                         /* To display the employee on Nav bar */
-                        JSONArray employees = new JSONArray(res);
+                        employees = new JSONArray(res);
                         if(employees.length()!=0){
                             final SubMenu EmpSubMenu = menu.addSubMenu("Employees");
                             JSONObject emp;
-                            JSONArray eSkills , eCertificates , eClients ;
                             for(int i=0;i<employees.length();i++){
+                                EmployeeCount++;
                                 emp = employees.getJSONObject(i);
-                                eSkills = new JSONArray(emp.getString("skills"));
-                                eCertificates = new JSONArray(emp.getString("certificates"));
-                                eClients = new JSONArray(emp.getString("clients"));
-                                if(eSkills.length()!=0 && eCertificates.length()!=0 && eClients.length()!=0){
-                                    EmployeeCount++;
-                                    EmpSubMenu.add(Menu.NONE,213*EmployeeCount,Menu.NONE,emp.getString("name"));
-                                }
+                                EmpSubMenu.add(Menu.NONE,EmpKey*EmployeeCount,Menu.NONE,emp.getString("name"));
                             }
                             if(EmployeeCount==0){
                                 EmpSubMenu.add("None have updated their data");
@@ -298,6 +300,10 @@ public class UserActivity extends AppCompatActivity
                 ((TextView) findViewById(R.id.error_msg)).setText("Problem occured while fetching data");
             }
         }
+    }
+
+    private void toastMessage(String message){
+        Toast.makeText(UserActivity.this, message, Toast.LENGTH_SHORT).show();
     }
 
 

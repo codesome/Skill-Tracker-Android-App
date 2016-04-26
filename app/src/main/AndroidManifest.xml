@@ -27,7 +27,11 @@
         <activity
             android:name=".UserActivity"
             android:label="@string/title_activity_user"
-            android:theme="@style/AppTheme.NoActionBar"/>
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".EmployeeView"
+            android:label="@string/title_activity_employee_view"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>
