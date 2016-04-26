@@ -2,7 +2,7 @@
     <string name="app_name">Skill Tracker</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_login">Sign in</string>
-    <string name="title_logout">Log Out</string>
+    <string name="title_logout">LogOut</string>
 
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>
@@ -17,4 +17,8 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="title_activity_manager_main">ManagerMain</string>
     <string name="title_activity_user">UserActivity</string>
+
+    <string name="skills">Skills</string>
+    <string name="certificates">Certificates</string>
+    <string name="clients">Clients</string>
 </resources>

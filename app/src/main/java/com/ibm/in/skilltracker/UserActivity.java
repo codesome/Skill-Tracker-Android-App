@@ -17,19 +17,25 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.SubMenu;
 import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
+/*
+*
+* Employee ID key = 213
+*
+* */
 
 public class UserActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
+
+    private int EmployeeCount;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,19 +60,21 @@ public class UserActivity extends AppCompatActivity
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
 
         /*===========================*/
         SharedPreferences user = getSharedPreferences("userDetails",Context.MODE_PRIVATE);
         if(!user.getBoolean("LoggedIn",false)){
             startActivity(new Intent(UserActivity.this, FirstActivity.class));
         }
+
+        // To set header
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
         View header = navigationView.inflateHeaderView(R.layout.nav_header_user);
-        ((TextView) header.findViewById(R.id.nav_name)).setText(user.getString("name","Name"));
+        ((TextView) header.findViewById(R.id.nav_name)).setText(user.getString("name", "Name"));
         ((TextView) header.findViewById(R.id.nav_email)).setText(user.getString("email", "Email"));
 
-
+        EmployeeCount = 0;
         // POST req to get user data
         (new GetUserData()).execute(
                 "/app/getUserData",
@@ -95,12 +103,6 @@ public class UserActivity extends AppCompatActivity
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.logout) {
-            getSharedPreferences("userDetails", Context.MODE_PRIVATE).edit().clear().putBoolean("LoggedIn", false).commit();
-            startActivity(new Intent(UserActivity.this, FirstActivity.class));
-            return true;
-        }
-
         return super.onOptionsItemSelected(item);
     }
 
@@ -110,18 +112,9 @@ public class UserActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
+        if(id == R.id.logout){
+            getSharedPreferences("userDetails", Context.MODE_PRIVATE).edit().clear().putBoolean("LoggedIn", false).commit();
+            startActivity(new Intent(UserActivity.this, FirstActivity.class));
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -133,16 +126,18 @@ public class UserActivity extends AppCompatActivity
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-        if(!(activeNetworkInfo != null && activeNetworkInfo.isConnected())){
+        if(!(activeNetworkInfo != null && activeNetworkInfo.isConnected())) {
             startActivity(new Intent(UserActivity.this,FirstActivity.class));
         }
     }
 
+    /* To get the User Data */
     private class GetUserData extends HttpPost {
         public ProgressDialog progress;
 
         @Override
         protected void onPreExecute(){
+            checkIfNetworkIsConnected();
             progress= new ProgressDialog(UserActivity.this);
             progress.setMessage("Loading...");
             progress.setCancelable(false);
@@ -155,6 +150,7 @@ public class UserActivity extends AppCompatActivity
             progress.dismiss();
             if(!res.equals("")){
                 if(res.equals("invalid")){
+                    progress.dismiss();
                     getSharedPreferences("userDetails", Context.MODE_PRIVATE).edit().clear().putBoolean("LoggedIn", false).commit();
                     startActivity(new Intent(UserActivity.this, FirstActivity.class));
                 } else {
@@ -165,71 +161,141 @@ public class UserActivity extends AppCompatActivity
                         JSONArray certificates = new JSONArray(userData.getString("certificates"));
                         JSONArray clients = new JSONArray(userData.getString("clients"));
 
-                        /*String certificateString = userData.getString("certificates");
-                        String[] certificates = certificateString.substring(1,certificateString.length()-1).split(",");
-                        for(int i=0;i<certificates.length;i++){
-                            certificates[i] = certificates[i].substring(1,certificates[i].length()-1);
+                        // Adding Skills to read
+                        LinearLayout readSkills = (LinearLayout) findViewById(R.id.read_skills);
+                        if(userSkills.length()!=0) {
+                            JSONObject skill;
+                            String role, skillName, skillType;
+                            for (int i = 0; i < userSkills.length(); i++) {
+                                skill = userSkills.getJSONObject(i);
+                                role = skill.getString("role");
+                                skillName = skill.getString("skillName");
+                                skillType = skill.getString("skillType");
+                                TextView t = new TextView(UserActivity.this);
+                                t.setText(role + "-" + skillName + "-" + skillType);
+                                readSkills.addView(t);
+                            }
+                        } else {
+                            TextView t = new TextView(UserActivity.this);
+                            t.setText("None");
+                            readSkills.addView(t);
                         }
 
-                        String clientString = userData.getString("clients");
-                        String[] clients = clientString.substring(1,clientString.length()-1).split(",");
-                        for(int i=0;i<clients.length;i++){
-                            clients[i] = clients[i].substring(1,clients[i].length()-1);
-                        }*/
-
-                        JSONObject skill;
-                        ArrayList ReadSkillsAdapterArray = new ArrayList();
-                        String role,skillName,skillType;
-                        for(int i=0;i<userSkills.length();i++){
-                            skill = userSkills.getJSONObject(i);
-                            role = skill.getString("role");
-                            skillName = skill.getString("skillName");
-                            skillType = skill.getString("skillType");
-                            ReadSkillsAdapterArray.add(role+"-"+skillName+"-"+skillType);
+                        // Adding certificates to read
+                        LinearLayout readCert = (LinearLayout) findViewById(R.id.read_certificates);
+                        if(certificates.length()!=0) {
+                            JSONObject obj;
+                            for (int i = 0; i < certificates.length(); i++) {
+                                TextView t = new TextView(UserActivity.this);
+                                obj = certificates.getJSONObject(i);
+                                String text = obj.getString("data") + " | ";
+                                if (!obj.getString("month").equals("null")) {
+                                    text += obj.getString("month") + ",";
+                                }
+                                text += obj.getString("year");
+                                t.setText(text);
+                                readCert.addView(t);
+                            }
+                        } else {
+                            TextView t = new TextView(UserActivity.this);
+                            t.setText("None");
+                            readCert.addView(t);
                         }
 
-                        ArrayList ReadCertAdapterArray = new ArrayList();
-                        for(int i=0;i<certificates.length();i++){
-                            ReadCertAdapterArray.add(certificates.getString(i));
+                        // Adding clients to read
+                        LinearLayout readCli = (LinearLayout) findViewById(R.id.read_clients);
+                        if(clients.length()!=0) {
+                            for (int i = 0; i < clients.length(); i++) {
+                                TextView t = new TextView(UserActivity.this);
+                                t.setText(clients.getString(i));
+                                readCli.addView(t);
+                            }
+                        } else {
+                            TextView t = new TextView(UserActivity.this);
+                            t.setText("None");
+                            readCli.addView(t);
                         }
 
-                        ArrayList ReadCliAdapterArray = new ArrayList();
-                        for(int i=0;i<clients.length();i++){
-                            ReadCliAdapterArray.add(clients.getString(i));
-                        }
+                        progress.dismiss();
 
-
-
-                        ArrayAdapter<String> ReadSkillAdapter = new ArrayAdapter<String>(
-                                UserActivity.this,
-                                R.layout.read_skill_list_item,
-                                R.id.read_skill_textview,
-                                ReadSkillsAdapterArray
+                        (new GetEmployeeData()).execute(
+                                "/app/getEmployeeData",
+                                "id="+userData.getString("_id")
                         );
-                        ((ListView) findViewById(R.id.read_skills)).setAdapter(ReadSkillAdapter);
-
-                        ArrayAdapter<String> ReadCertAdapter = new ArrayAdapter<String>(
-                                UserActivity.this,
-                                R.layout.read_skill_list_item,
-                                R.id.read_skill_textview,
-                                ReadCertAdapterArray
-                        );
-                        ((ListView) findViewById(R.id.read_certificates)).setAdapter(ReadCertAdapter);
-
-                        ArrayAdapter<String> ReadCliAdapter = new ArrayAdapter<String>(
-                                UserActivity.this,
-                                R.layout.read_skill_list_item,
-                                R.id.read_skill_textview,
-                                ReadCliAdapterArray
-                        );
-                        ((ListView) findViewById(R.id.read_clients)).setAdapter(ReadCliAdapter);
 
                     } catch (JSONException e) {
+                        progress.dismiss();
                         e.printStackTrace();
                     }
                 }
             } else {
+                progress.dismiss();
                 ((TextView) findViewById(R.id.error_msg)).setText("Problem occured while authenticating");
+            }
+        }
+    }
+
+    /* To get the User Data */
+    private class GetEmployeeData extends HttpPost {
+        public ProgressDialog progress;
+
+        @Override
+        protected void onPreExecute(){
+            checkIfNetworkIsConnected();
+            progress= new ProgressDialog(UserActivity.this);
+            progress.setMessage("Fetching latest data");
+            progress.setCancelable(false);
+            progress.setCanceledOnTouchOutside(false);
+            progress.show();
+        }
+
+        @Override
+        protected void onPostExecute(String res){
+            progress.dismiss();
+            if(!res.equals("")){
+                if(res.equals("invalid")){
+                    progress.dismiss();
+                    getSharedPreferences("userDetails", Context.MODE_PRIVATE).edit().clear().putBoolean("LoggedIn", false).commit();
+                    startActivity(new Intent(UserActivity.this, FirstActivity.class));
+                } else {
+                    try {
+
+                        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+                        final Menu menu = navigationView.getMenu();
+
+                        /* To display the employee on Nav bar */
+                        JSONArray employees = new JSONArray(res);
+                        if(employees.length()!=0){
+                            final SubMenu EmpSubMenu = menu.addSubMenu("Employees");
+                            JSONObject emp;
+                            JSONArray eSkills , eCertificates , eClients ;
+                            for(int i=0;i<employees.length();i++){
+                                emp = employees.getJSONObject(i);
+                                eSkills = new JSONArray(emp.getString("skills"));
+                                eCertificates = new JSONArray(emp.getString("certificates"));
+                                eClients = new JSONArray(emp.getString("clients"));
+                                if(eSkills.length()!=0 && eCertificates.length()!=0 && eClients.length()!=0){
+                                    EmployeeCount++;
+                                    EmpSubMenu.add(Menu.NONE,213*EmployeeCount,Menu.NONE,emp.getString("name"));
+                                }
+                            }
+                            if(EmployeeCount==0){
+                                EmpSubMenu.add("None have updated their data");
+                            }
+                        }
+
+                        // Logout button
+                        final SubMenu subMenu = menu.addSubMenu("");
+                        subMenu.add(Menu.NONE,R.id.logout,Menu.NONE,R.string.title_logout);
+                        progress.dismiss();
+                    } catch (JSONException e) {
+                        progress.dismiss();
+                        e.printStackTrace();
+                    }
+                }
+            } else {
+                progress.dismiss();
+                ((TextView) findViewById(R.id.error_msg)).setText("Problem occured while fetching data");
             }
         }
     }

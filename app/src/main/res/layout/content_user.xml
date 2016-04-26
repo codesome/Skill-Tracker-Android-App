@@ -17,20 +17,41 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <ListView
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/skills"
+            android:textStyle="bold"/>
+        <LinearLayout
             android:id="@+id/read_skills"
+            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="100dp"/>
+            android:layout_height="wrap_content">
+        </LinearLayout>
 
-        <ListView
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/certificates"
+            android:textStyle="bold"/>
+        <LinearLayout
             android:id="@+id/read_certificates"
+            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="100dp"/>
+            android:layout_height="wrap_content">
+        </LinearLayout>
 
-        <ListView
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/clients"
+            android:textStyle="bold"/>
+        <LinearLayout
             android:id="@+id/read_clients"
+            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="100dp"/>
+            android:layout_height="wrap_content">
+        </LinearLayout>
 
 
     </LinearLayout>
