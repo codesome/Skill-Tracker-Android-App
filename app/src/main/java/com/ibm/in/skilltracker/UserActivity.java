@@ -120,9 +120,14 @@ public class UserActivity extends AppCompatActivity
         if(id == R.id.logout){
             getSharedPreferences("userDetails", Context.MODE_PRIVATE).edit().clear().putBoolean("LoggedIn", false).commit();
             startActivity(new Intent(UserActivity.this, FirstActivity.class));
+            finish();
+        } else if (id == R.id.nav_edit){
+            startActivity(new Intent(UserActivity.this,EditActivity.class));
+        } else if (id == R.id.nav_home){
+            startActivity(new Intent(UserActivity.this,UserActivity.class));
+            finish();
         } else if (id%EmpKey == 0){
             int empId = id/EmpKey -1 ;
-            String n = null;
             try {
                 Intent intent = new Intent(UserActivity.this,EmployeeView.class);
                 intent.putExtra("id",employees.getJSONObject(empId).getString("id"));

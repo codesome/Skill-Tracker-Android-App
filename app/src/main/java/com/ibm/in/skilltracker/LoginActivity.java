@@ -58,27 +58,33 @@ public class LoginActivity extends AppCompatActivity{
 
         @Override
         protected void onPostExecute(String res){
-            progress.dismiss();
             if(!res.equals("")){
                 if(res.equals("invalid")){
+                    progress.dismiss();
                     ((TextView) findViewById(R.id.error_msg)).setText("Invalid Credentials");
-                } else {
+                } else if(res.equals("DoesNotExist")) {
+                    progress.dismiss();
+                    ((TextView) findViewById(R.id.error_msg)).setText("This service is not activated for your account. Please contact the admin");
+                } else{
                     try {
                         JSONObject userObject = new JSONObject(res);
                         SharedPreferences userDetails = getSharedPreferences("userDetails",Context.MODE_PRIVATE);
                         SharedPreferences.Editor user = userDetails.edit();
-                        user.putString("id",userObject.getString("_id"));
+                        user.putString("id", userObject.getString("_id"));
                         user.putString("name",userObject.getString("name"));
-                        user.putString("email",userObject.getString("email"));
+                        user.putString("email", userObject.getString("email"));
                         user.putBoolean("LoggedIn", true);
                         user.commit();
+                        progress.dismiss();
                         startActivity(new Intent(LoginActivity.this, UserActivity.class));
                         finish();
                     } catch (JSONException e) {
+                        progress.dismiss();
                         e.printStackTrace();
                     }
                 }
             } else {
+                progress.dismiss();
                 ((TextView) findViewById(R.id.error_msg)).setText("Problem occured while authenticating");
             }
         }

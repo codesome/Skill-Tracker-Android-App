@@ -12,7 +12,7 @@ import java.net.URL;
 
 public class HttpPost extends AsyncTask<String, Void, String> {
 
-    private String rootURL = "http://172.16.0.101:3000";
+    private String rootURL = "http://192.168.1.33:3000";
 
     @Override
     protected String doInBackground(String... params) {

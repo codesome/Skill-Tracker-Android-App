@@ -31,6 +31,10 @@
         <activity
             android:name=".EmployeeView"
             android:label="@string/title_activity_employee_view"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".EditActivity"
+            android:label="@string/title_activity_edit"
             android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
