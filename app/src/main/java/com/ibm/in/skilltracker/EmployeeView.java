@@ -126,9 +126,11 @@ public class EmployeeView extends AppCompatActivity {
                         // Adding clients to read
                         LinearLayout readCli = (LinearLayout) findViewById(R.id.read_clients);
                         if(clients.length()!=0) {
+                            JSONObject client;
                             for (int i = 0; i < clients.length(); i++) {
+                                client = clients.getJSONObject(i);
                                 TextView t = new TextView(EmployeeView.this);
-                                t.setText(clients.getString(i));
+                                t.setText(client.getString("data")+" | "+client.getString("duration")+" | "+client.getString("lastWorked"));
                                 readCli.addView(t);
                             }
                         } else {
