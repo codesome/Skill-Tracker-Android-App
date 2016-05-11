@@ -7,16 +7,10 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.view.ViewPager;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -30,91 +24,58 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
 
-public class EditActivity extends AppCompatActivity {
+public class EditCertificateFragment extends Fragment {
+
+
     public ProgressDialog progress;
 
-    private int startClientID = 1117 , endClientID , cbllClientKey = 3323 , dClientKey = 4723 , lwClientKey = 6343 ;
     private int startCertID = 7109  , endCertID , cbllCertKey = 8231 , dCertKey = 9319 , lwCertKey = 10079 ;
 
-    private Toolbar toolbar;
-    private TabLayout tabLayout;
-    private ViewPager viewPager;
+
+    public EditCertificateFragment() {
+        // Required empty public constructor
+    }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        checkIfNetworkIsConnected();
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_edit);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
-        viewPager = (ViewPager) findViewById(R.id.viewpager);
-        setupViewPager(viewPager);
-
-        tabLayout = (TabLayout) findViewById(R.id.tabs);
-        tabLayout.setupWithViewPager(viewPager);
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
-
-        //  refreshUserClients();
+        refreshUserCertificates();
     }
 
-    private void setupViewPager(ViewPager viewPager) {
-        ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
-        adapter.addFrag(new EditSkillFragment(), "SKILL");
-        adapter.addFrag(new EditClientFragment(), "CLIENT");
-        adapter.addFrag(new EditCertificateFragment(), "CERTIFICATE");
-        viewPager.setAdapter(adapter);
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        return inflater.inflate(R.layout.fragment_edit_certificate, container, false);
     }
-    class ViewPagerAdapter extends FragmentPagerAdapter {
-        private final List<Fragment> mFragmentList = new ArrayList<>();
-        private final List<String> mFragmentTitleList = new ArrayList<>();
 
-        public ViewPagerAdapter(FragmentManager manager) {
-            super(manager);
-        }
 
-        @Override
-        public Fragment getItem(int position) {
-            return mFragmentList.get(position);
-        }
 
-        @Override
-        public int getCount() {
-            return mFragmentList.size();
-        }
 
-        public void addFrag(Fragment fragment, String title) {
-            mFragmentList.add(fragment);
-            mFragmentTitleList.add(title);
-        }
 
-        @Override
-        public CharSequence getPageTitle(int position) {
-            return mFragmentTitleList.get(position);
-        }
-    }
 
 
 
 
     private void checkIfNetworkIsConnected(){
-        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager connectivityManager = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         if(!(activeNetworkInfo != null && activeNetworkInfo.isConnected())) {
-            startActivity(new Intent(EditActivity.this,FirstActivity.class));
+            startActivity(new Intent(getActivity(),FirstActivity.class));
         }
     }
+
+
+
+    private void refreshUserCertificates(){
+        SharedPreferences user = getActivity().getSharedPreferences("userDetails",Context.MODE_PRIVATE);
+        (new GetUserCertificates()).execute(
+                "/app/getAllCertificates",
+                "id=" + user.getString("id", null)
+        );
+    }
+
 
 
 
@@ -123,7 +84,7 @@ public class EditActivity extends AppCompatActivity {
         @Override
         protected void onPreExecute(){
             checkIfNetworkIsConnected();
-            //progress= new ProgressDialog(EditActivity.this);
+            progress= new ProgressDialog(getActivity());
             progress.setMessage("Fetching Certificates");
             progress.setCancelable(false);
             progress.setCanceledOnTouchOutside(false);
@@ -137,7 +98,7 @@ public class EditActivity extends AppCompatActivity {
                 progress.setMessage("Updating Certificates");
                 JSONArray allCerts= new JSONArray(res);
 
-                LinearLayout certLayout = (LinearLayout) findViewById(R.id.edit_certificates);
+                LinearLayout certLayout = (LinearLayout) getView().findViewById(R.id.edit_certificates);
                 certLayout.removeAllViews();
 
                 CheckBox c;
@@ -150,7 +111,7 @@ public class EditActivity extends AppCompatActivity {
 
                     cert = allCerts.getJSONObject(i);
 
-                    c = new CheckBox(EditActivity.this);
+                    c = new CheckBox(getActivity());
                     text = cert.getString("data");
                     c.setText(text);
                     c.setId(checkboxID);
@@ -159,9 +120,9 @@ public class EditActivity extends AppCompatActivity {
                         @Override
                         public void onClick(View v) {
                             CheckBox c = (CheckBox) v;
-                            LinearLayout l = (LinearLayout) findViewById(finalCheckboxID + cbllCertKey);
+                            LinearLayout l = (LinearLayout) getView().findViewById(finalCheckboxID + cbllCertKey);
                             if (c.isChecked()) {
-                                Spinner spinner = new Spinner(EditActivity.this);
+                                Spinner spinner = new Spinner(getActivity());
 
                                 ArrayList<String> spinnerArray = new ArrayList<String>();
                                 spinnerArray.add("Year");
@@ -169,18 +130,18 @@ public class EditActivity extends AppCompatActivity {
                                 for (int i = 1990; i <= currentYear; i++) {
                                     spinnerArray.add("" + i);
                                 }
-                                ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<String>(EditActivity.this, R.layout.spinner_format, spinnerArray);
+                                ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<String>(getActivity(), R.layout.spinner_format, spinnerArray);
                                 spinner.setAdapter(spinnerArrayAdapter);
                                 spinner.setId(finalCheckboxID + dCertKey);
                                 l.addView(spinner);
 
-                                spinner = new Spinner(EditActivity.this);
+                                spinner = new Spinner(getActivity());
                                 spinnerArray = new ArrayList<String>();
                                 spinnerArray.add("Month");
                                 for (int i = 1990; i <= currentYear; i++) {
                                     spinnerArray.add("" + i);
                                 }
-                                spinnerArrayAdapter = new ArrayAdapter<String>(EditActivity.this, R.layout.spinner_format, spinnerArray);
+                                spinnerArrayAdapter = new ArrayAdapter<String>(getActivity(), R.layout.spinner_format, spinnerArray);
                                 spinner.setAdapter(spinnerArrayAdapter);
                                 spinner.setId(finalCheckboxID + lwCertKey);
                                 l.addView(spinner);
@@ -193,7 +154,7 @@ public class EditActivity extends AppCompatActivity {
                         }
                     });
 
-                    ll = new LinearLayout(EditActivity.this);
+                    ll = new LinearLayout(getActivity());
                     ll.setOrientation(LinearLayout.HORIZONTAL);
                     ll.setId(checkboxID+cbllCertKey);
 
@@ -208,7 +169,7 @@ public class EditActivity extends AppCompatActivity {
                 }
                 endCertID= startCertID + allCerts.length()-1;
 
-                Button b = new Button(EditActivity.this);
+                Button b = new Button(getActivity());
                 b.setText("Submit");
                 b.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -221,10 +182,10 @@ public class EditActivity extends AppCompatActivity {
                         JSONObject cert;
                         for (int i = startCertID; i <= endCertID; i++) {
                             if(flag) {
-                                c = (CheckBox) findViewById(i);
+                                c = (CheckBox) getView().findViewById(i);
                                 if (c.isChecked()) {
-                                    d = ((Spinner) findViewById(i + dCertKey));
-                                    lw = ((Spinner) findViewById(i + lwCertKey));
+                                    d = ((Spinner) getView().findViewById(i + dCertKey));
+                                    lw = ((Spinner) getView().findViewById(i + lwCertKey));
                                     if(d!=null && lw!=null) {
                                         dText = d.getSelectedItem().toString();
                                         lwText = lw.getSelectedItem().toString();
@@ -261,7 +222,7 @@ public class EditActivity extends AppCompatActivity {
                         }
 
                         if(flag) {
-                            SharedPreferences user = getSharedPreferences("userDetails", Context.MODE_PRIVATE);
+                            SharedPreferences user = getActivity().getSharedPreferences("userDetails", Context.MODE_PRIVATE);
                             (new UpdateUserCertificates()).execute(
                                     "/app/UpdateUserCertificates",
                                     "id=" + user.getString("id", null) + "&certificate=" + certificates.toString()
@@ -270,7 +231,7 @@ public class EditActivity extends AppCompatActivity {
                     }
                 });
                 certLayout.addView(b);
-                progress.dismiss();
+               progress.dismiss();
 
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -285,7 +246,7 @@ public class EditActivity extends AppCompatActivity {
         @Override
         protected void onPreExecute(){
             checkIfNetworkIsConnected();
-            progress= new ProgressDialog(EditActivity.this);
+            progress= new ProgressDialog(getActivity());
             progress.setMessage("Updating Clients");
             progress.setCancelable(false);
             progress.setCanceledOnTouchOutside(false);
@@ -298,7 +259,7 @@ public class EditActivity extends AppCompatActivity {
             if(res.equals("success")){
                 LinearLayout ll;
                 for(int i = startCertID+cbllCertKey; i<= endCertID+cbllCertKey; i++){
-                    ll = (LinearLayout) findViewById(i);
+                    ll = (LinearLayout) getView().findViewById(i);
                     if(ll!=null){
                         ll.removeAllViews();
                     }
@@ -312,6 +273,7 @@ public class EditActivity extends AppCompatActivity {
     }
 
     private void toastMessage(String message){
-        Toast.makeText(EditActivity.this, message, Toast.LENGTH_SHORT).show();
+        Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
     }
+
 }

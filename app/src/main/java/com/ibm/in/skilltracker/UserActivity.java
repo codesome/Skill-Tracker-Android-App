@@ -15,6 +15,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
@@ -147,7 +148,7 @@ public class UserActivity extends AppCompatActivity
                 = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         if(!(activeNetworkInfo != null && activeNetworkInfo.isConnected())) {
-            startActivity(new Intent(UserActivity.this,FirstActivity.class));
+            startActivity(new Intent(UserActivity.this, FirstActivity.class));
         }
     }
 
@@ -280,6 +281,7 @@ public class UserActivity extends AppCompatActivity
 
                         /* To display the employee on Nav bar */
                         employees = new JSONArray(res);
+                        Log.e("emp count",""+employees.length());
                         if(employees.length()!=0){
                             final SubMenu EmpSubMenu = menu.addSubMenu("Employees");
                             JSONObject emp;
